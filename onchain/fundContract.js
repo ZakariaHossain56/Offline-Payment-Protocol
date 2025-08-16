@@ -5,7 +5,7 @@ async function fundContract() {
   const provider = new ethers.JsonRpcProvider("http://127.0.0.1:7545");
   const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 
-  const contractAddress = require("../storage/deployment-ganache.json").contractAddress;
+  const contractAddress = require("./storage/deployment-ganache.json").contractAddress;
 
   // Check the current contract balance
   const contractBalance = await provider.getBalance(contractAddress);

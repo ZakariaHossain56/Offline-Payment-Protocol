@@ -28,3 +28,11 @@ start backend server => npx hardhat run backend/server.js
 
 fund the channel => npx hardhat run onchain/fundBidirectional.js
                         (funding info saved to fundingDetails.json)
+
+check offline balance => npx hardhat run utils/checkOfflineBalances.js
+
+micropayments => npx hardhat run offchain/signBidirectional.js
+
+redeem => npx hardhat run onchain/redeemBidirectional.js
+
+check main balance => npx hardhat run utils/checkBalances.js 

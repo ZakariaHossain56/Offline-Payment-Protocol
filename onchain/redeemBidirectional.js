@@ -1,28 +1,38 @@
+
+
+
+
+require("dotenv").config({ path: "../.env" });
 const { ethers } = require("ethers");
 const fs = require("fs");
-require("dotenv").config({ path: "../.env" });
 
-async function settleBalances() {
+// Setup provider and wallet (Party A is fine since both signatures are required anyway)
+const provider = new ethers.JsonRpcProvider("http://127.0.0.1:7545");
+const walletA = new ethers.Wallet(process.env.PARTY_A_PRIVATE_KEY, provider);
+
+// Load contract
+const deploymentData = JSON.parse(fs.readFileSync("./storage/deployment-bidirectional-ganache.json"));
+const contractAddress = deploymentData.contractAddress;
+const abi = require("../artifacts/contracts/BidirectionalPaymentChannel.sol/BidirectionalPaymentChannel.json").abi;
+const contract = new ethers.Contract(contractAddress, abi, walletA);
+
+async function updateBalances() {
+  const currentBalanceA = await provider.getBalance(walletA.address);
+  console.log(`💵 Party A: ${ethers.formatEther(currentBalanceA)} ETH`);
+  
+  // If you also want Party B's balance
+  const walletB = new ethers.Wallet(process.env.PARTY_B_PRIVATE_KEY, provider);
+  const currentBalanceB = await provider.getBalance(walletB.address);
+  console.log(`💵 Party B: ${ethers.formatEther(currentBalanceB)} ETH`);
+}
+
+async function finalizeChannel() {
   try {
-    // 1. Setup provider and wallets
-    const provider = new ethers.JsonRpcProvider("http://127.0.0.1:7545");
-    const walletA = new ethers.Wallet(process.env.PARTY_A_PRIVATE_KEY, provider);
-    const walletB = new ethers.Wallet(process.env.PARTY_B_PRIVATE_KEY, provider);
+    // Read signed state from file
+    const payload = JSON.parse(fs.readFileSync("./storage/signedPayment.json"));
+    console.log("📄 Using signed state with nonce:", payload.nonce);
 
-    // 2. Load contract
-    const deploymentData = JSON.parse(fs.readFileSync("../storage/deployment-bidirectional-ganache.json"));
-    const contractAddress = deploymentData.contractAddress;
-    const abi = require("../artifacts/contracts/BidirectionalPaymentChannel.sol/BidirectionalPaymentChannel.json").abi;
-    const contract = new ethers.Contract(contractAddress, abi, walletA);
-
-    // 3. Read signed state
-    const payload = JSON.parse(fs.readFileSync("../storage/signedPayment.json"));
-    console.log("📄 Loaded signed state:");
-    console.log(`- Party A Balance: ${ethers.formatEther(payload.balanceA)} ETH`);
-    console.log(`- Party B Balance: ${ethers.formatEther(payload.balanceB)} ETH`);
-    console.log(`- Nonce: ${payload.nonce}`);
-
-    // 4. Verify the state hash matches signatures
+    // Verify signatures locally
     const stateHash = ethers.solidityPackedKeccak256(
       ["uint256", "uint256", "uint256", "address"],
       [payload.balanceA, payload.balanceB, payload.nonce, contractAddress]
@@ -31,16 +41,12 @@ async function settleBalances() {
     const recoveredA = ethers.verifyMessage(ethers.getBytes(stateHash), payload.sigA);
     const recoveredB = ethers.verifyMessage(ethers.getBytes(stateHash), payload.sigB);
 
-    console.log("\n🔍 Signature Verification:");
-    console.log(`- Recovered Party A: ${recoveredA} (matches ${walletA.address}? ${recoveredA === walletA.address})`);
-    console.log(`- Recovered Party B: ${recoveredB} (matches ${walletB.address}? ${recoveredB === walletB.address})`);
-
-    if (recoveredA !== walletA.address || recoveredB !== walletB.address) {
-      throw new Error("❌ Invalid signatures! Cannot settle balances.");
+    if (recoveredA !== process.env.PARTY_A_ADDRESS || recoveredB !== process.env.PARTY_B_ADDRESS) {
+      throw new Error("❌ Invalid signatures! Refusing to finalize.");
     }
 
-    // 5. Submit to contract
-    console.log("\n🔄 Submitting to contract...");
+    // Submit to contract
+    console.log("🔄 Submitting final state to contract...");
     const tx = await contract.submitFinalState(
       payload.balanceA,
       payload.balanceB,
@@ -54,19 +60,14 @@ async function settleBalances() {
     const receipt = await tx.wait();
     console.log(`✅ Transaction mined in block ${receipt.blockNumber}`);
 
-    // 6. Verify balances were updated
-    const newBalanceA = await provider.getBalance(walletA.address);
-    const newBalanceB = await provider.getBalance(walletB.address);
-    console.log("\n💰 Final Balances:");
-    console.log(`- Party A: ${ethers.formatEther(newBalanceA)} ETH`);
-    console.log(`- Party B: ${ethers.formatEther(newBalanceB)} ETH`);
-  } catch (error) {
-    console.error("❌ Settlement failed:", error);
-    if (error.reason) {
-      console.error("Revert reason:", error.reason);
-    }
-    process.exit(1);
+    await updateBalances();
+  } catch (err) {
+    console.error("❌ Finalization failed:", err.message);
+    if (err.reason) console.error("Revert reason:", err.reason);
   }
 }
 
-settleBalances();
+finalizeChannel().catch((err) => {
+  console.error("❌ Script error:", err);
+  process.exit(1);
+});

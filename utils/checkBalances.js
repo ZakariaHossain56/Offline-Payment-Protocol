@@ -3,19 +3,22 @@ const { ethers } = require("ethers");
 
 async function main() {
   const provider = new ethers.JsonRpcProvider("http://127.0.0.1:7545");
-  const privateKey = process.env.PRIVATE_KEY; // Payer's private key
-  const wallet = new ethers.Wallet(privateKey, provider);
 
-  const payerAddress = wallet.address; // Derive the address from the private key
-  const receiverAddress = process.env.RECEIVER_ADDRESS; // Receiver's address
+  // Party A
+  const walletA = new ethers.Wallet(process.env.PARTY_A_PRIVATE_KEY, provider);
+  const balanceA = await provider.getBalance(walletA.address);
 
-  console.log("Payer Address:", payerAddress);
+  // Party B
+  const walletB = new ethers.Wallet(process.env.PARTY_B_PRIVATE_KEY, provider);
+  const balanceB = await provider.getBalance(walletB.address);
 
-  const balanceFrom = await provider.getBalance(payerAddress);
-  const balanceTo = await provider.getBalance(receiverAddress);
+  console.log("Party A Address:", walletA.address);
+  console.log("Party A Balance:", ethers.formatEther(balanceA), "ETH");
 
-  console.log("Payer Balance:", ethers.formatEther(balanceFrom), "ETH");
-  console.log("Receiver Balance:", ethers.formatEther(balanceTo), "ETH");
+  console.log("Party B Address:", walletB.address);
+  console.log("Party B Balance:", ethers.formatEther(balanceB), "ETH");
 }
 
-main();
+main().catch((err) => {
+  console.error("Error:", err);
+});

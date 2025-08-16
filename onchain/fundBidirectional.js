@@ -69,6 +69,19 @@ async function fundContract() {
 
   fs.writeFileSync("./storage/fundingDetails.json", JSON.stringify(details, null, 2));
   console.log("📝 Funding details saved to storage/fundingDetails.json");
+
+
+  //Initialize signedPayment.json with new balances
+  const nonce = 0;
+  const state = {
+            balanceA: fundAmountA.toString(),
+            balanceB: fundAmountB.toString(),
+            nonce,
+            sigA: txA.hash,
+            sigB: txB.hash
+          };
+  fs.writeFileSync("./storage/signedPayment.json", JSON.stringify(state, null, 2));
+  console.log("📝 Initializing fundings details to storage/signedPayment.json");
 }
 
 fundContract().catch(console.error);
