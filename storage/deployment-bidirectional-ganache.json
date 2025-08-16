@@ -1,0 +1,6 @@
+{
+  "network": "ganache",
+  "contractAddress": "0xC2485734477b32e702eb9Ca8B5976092Dd39D0e2",
+  "partyB": "0x5C8454512AA7de45CB09d7c6E8d75650849C050e",
+  "timestamp": 1755327936015
+}

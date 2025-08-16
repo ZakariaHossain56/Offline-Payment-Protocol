@@ -1,0 +1,86 @@
+----npm init -y
+    Initializes a node.js project by creating a package.json file for managing dependency and project metadata.
+    Why? -> Install packages like hardhat, ethers, etc. Track them in your project. Run scripts like npm run deploy
+
+----npm install --save-dev hardhat
+    Installs Hardhat as a development dependency (--save-dev) in your Node.js project.
+
+----npx hardhat
+    Starts the Hardhat setup wizard.
+
+----npm install ethers
+    Installs Ethers.js 
+
+----npx hardhat run scripts/check-network.js --network ganache
+    Hardhat connects to the local ganache instance and runs the script which is designed to interact with the network
+
+----npx hardhat compile
+    Compile the script
+
+----npx hardhat run scripts/deploy.js --network ganache
+    Deploy the contract to ganache
+
+
+
+SUMMARY
+1. Sign a payment message off-chain (by the sender using their private key)
+2️⃣	Send the signed message to the recipient via any channel (Bluetooth, QR code, NFC, etc.)
+3️⃣	Recipient submits the signed message on-chain via verifyAndDeposit()
+4️⃣	Smart contract validates the signature and transfers ETH
+5️⃣	Replay protection ensures the message is only used once
+
+
+
+END TO END TEST
+Run npx hardhat node
+Deploy contract
+Start backend node index.js
+Run Flutter app
+Sign a transaction offline
+Scan with Flutter
+Go online → TX auto-pushes to blockchain
+Check your contract’s state or account balance
+
+🧭 Here's the proper order again:
+✅ Start Ganache
+✅ Deploy the contract (npx hardhat run scripts/deploy.js)
+✅ Fund the contract (node fundContract.js)
+✅ Start the backend server (node index.js) ← Start here
+✅ Sign the payment (node signTransaction.js)
+✅ Redeem the payment (node redeemPayment.js)
+✅ (Optional) Check balances (node checkBalances.js)
+
+offline-payment/
+├── contract/
+│   ├── BidirectionalPaymentChannel.sol         ->creates payment channel and settle balance
+│   ├── OfflinePayment.sol
+├── scripts/    
+│   ├── deployBidrectional.js                   ->Deploy the smart contract
+│   ├── deploy.js
+│   └── check-network.js
+├── backend/
+│   ├── server.js                               ->Interact with blockchain
+│   └── index.js
+├── onchain/
+│   ├── fundBidirectional.js                    ->check ETH balance and fund contract
+│   └── redeemBidirectional.js                  ->final settle balance
+├── offchain/
+│   ├── signBidirectional.js                    ->Creates digital signature and store latest state
+│   └── signTransaction.js
+│
+├── storage/
+│   ├── fundingDetails.json
+│   └── signedPayment.json
+├── utils/
+│   └── checkBalances.js
+├── .env                                        ->Private key and addresses
+
+
+MICROPAYMENTS
+Micropayment Process: Each micropayment involves adjusting the internal state of the channel. This would usually include:
+
+Updating the balances of Party A and Party B (for example, Party A sends a small amount to Party B).
+
+Signing the updated state off-chain (this involves both parties signing the new state, but it's not immediately broadcast to the blockchain).
+
+Storing Micropayment Details: These micropayments would be recorded in a local storage (for example, a JSON file) until the channel is closed and the final state is settled.

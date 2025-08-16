@@ -1,0 +1,21 @@
+{
+  "contractAddress": "0xC2485734477b32e702eb9Ca8B5976092Dd39D0e2",
+  "initialBalance": "10.5 ETH",
+  "finalBalance": "11.0 ETH",
+  "fundings": [
+    {
+      "contractAddress": "0xC2485734477b32e702eb9Ca8B5976092Dd39D0e2",
+      "funder": "0xd583C96410BF022db85593f970E413d1237AA702",
+      "amountFunded": "0.3 ETH",
+      "txHash": "0x53d5ead3372c66f6a9a713df4d0e833fa34259a3d8a4d39e728857fe882e6593",
+      "timestamp": "2025-08-16T07:23:52.255Z"
+    },
+    {
+      "contractAddress": "0xC2485734477b32e702eb9Ca8B5976092Dd39D0e2",
+      "funder": "0x5C8454512AA7de45CB09d7c6E8d75650849C050e",
+      "amountFunded": "0.2 ETH",
+      "txHash": "0x2aa04615e70c08ac03fa35189e37598e5fb33a52522d9dc4c30477560d345ea3",
+      "timestamp": "2025-08-16T07:23:56.474Z"
+    }
+  ]
+}
